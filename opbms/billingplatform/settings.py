@@ -1,27 +1,28 @@
 """
 Django settings for the billingplatform project.
-Adjusted for Render deployment: reads secrets from env, supports DATABASE_URL,
-adds WhiteNoise for static files and keeps SQLite fallback for local dev.
+Fully configured for Render deployment using SQLite + Whitenoise.
 """
 
 import os
 from pathlib import Path
-import dj_database_url
 
-# Base dir
+# ---------------- Base Directory ----------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ---------- Security / env-config ----------
-# Use environment variables in production. The fallback values are for local dev only.
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-lakw1()!smzwh)wvzz8gx9mpf+9f&h65%@-by3zv8!^77_0a-^")
+# ---------------- Security Keys -----------------
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-default-key-change-in-production"
+)
 
-# Set DEBUG via env var: "True" or "False"
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-# ALLOWED_HOSTS should be comma-separated in env, e.g. "example.com,myapp.onrender.com"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1,.onrender.com"
+).split(",")
 
-# ---------- Applications ----------
+# ---------------- Installed Apps -----------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -29,17 +30,20 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "django.contrib.humanize",
     "billingapp",
     "adminportal",
     "customerportal",
 ]
 
-# ---------- Middleware ----------
+# ---------------- Middleware ---------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # WhiteNoise middleware serves static files in production
+
+    # Whitenoise for static files on Render
     "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -50,6 +54,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "billingplatform.urls"
 
+# ---------------- Templates ----------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -67,16 +72,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "billingplatform.wsgi.application"
 
-# ---------- Databases ----------
-# Use DATABASE_URL env var (Postgres on Render) if provided; otherwise use local SQLite.
+# ---------------- Database (FOR RENDER: SQLite3) ----------------
+# Force SQLite ONLY – no PostgreSQL / no DATABASE_URL override
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
-        conn_max_age=600,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
-# ---------- Password validation ----------
+# ---------------- Password Validation ----------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -84,37 +89,35 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# ---------- Internationalization ----------
+# ---------------- Localization ---------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# ---------- Static & Media ----------
+# ---------------- Static Files ----------------------
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Keep local static folder for development
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
-# WhiteNoise compressed manifest storage for efficient static serving
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Media (user uploaded) - consider S3 in production
+# ---------------- Media Files -----------------------
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# ---------- Security flags (recommended) ----------
-# These are safe to set; if you use local dev with DEBUG=True they won't affect dev.
-SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False") == "True"
-CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
-SECURE_BROWSER_XSS_FILTER = True
+# ---------------- Security Options -------------------
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
 
-# ---------- Defaults ----------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Auth redirects (keep your original)
+# ---------------- Authentication Redirects -----------
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "customerportal:dashboard"
 LOGOUT_REDIRECT_URL = "login"

@@ -1,1 +1,1 @@
-web: gunicorn billingplatform.wsgi --log-file -
+web: gunicorn billingplatform.wsgi:application --log-file -
