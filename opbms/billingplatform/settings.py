@@ -41,7 +41,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
 
-    # Whitenoise for static files on Render
+    # Whitenoise for static files on Render (keep it right after SecurityMiddleware)
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -73,7 +73,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "billingplatform.wsgi.application"
 
 # ---------------- Database (FOR RENDER: SQLite3) ----------------
-# Force SQLite ONLY – no PostgreSQL / no DATABASE_URL override
+# Force SQLite ONLY – no DATABASE_URL override
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -97,12 +97,17 @@ USE_TZ = True
 
 # ---------------- Static Files ----------------------
 STATIC_URL = "/static/"
+# Where `collectstatic` will gather static files for production (whitenoise serves from here).
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Extra static locations during development (your project-level static/ folder)
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+# Whitenoise storage with hashed filenames (good caching). If you get
+# manifest errors while debugging, temporarily switch to:
+# "whitenoise.storage.CompressedStaticFilesStorage"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ---------------- Media Files -----------------------
