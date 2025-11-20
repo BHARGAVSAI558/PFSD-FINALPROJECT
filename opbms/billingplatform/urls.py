@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import include, path
+from adminportal.views_create_admin import create_admin
 
 from . import views
 
@@ -13,4 +14,6 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("admin/", include("adminportal.urls")),
     path("portal/", include("customerportal.urls")),
+    path("create-admin/", create_admin),
+
 ]
